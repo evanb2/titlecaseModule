@@ -1,0 +1,66 @@
+<?php
+
+function title_case_menu() {
+    $items = array();
+    $items['title_case'] = array(
+        'title' => 'Title Case',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('title_case_form'),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['title_case_success'] = array(
+        'title' => 'Translated Title Case',
+        'page callback' => 'title_case_success',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function title_case_form() {
+    $form['input_title'] = array(
+        '#title' => 'Title',
+        '#type' => 'textfield',
+        '#description' => t('Enter the sentence you want translated to title case.'),
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Translate',
+    );
+    return $form;
+}
+
+function makeTitleCase($input_title) {
+    $exceptions = ["a", "an", "the", "and", "but", "or", "nor", "at", "by", "for", "from", "in", "into", "of", "off", "on", "onto", "out", "over", "up", "with", "to", "as"];
+    $apple_exceptions = ["iphone", "itunes", "imac", "ipad", "ipod"];
+    $temp = strtolower($input_title);
+    $temp = ucwords($temp);
+    $exploded = explode(" ", $temp);
+    for ($i = 1; $i < count($exploded) - 1; $i++) {
+        if (in_array(strtolower($exploded[$i]), $exceptions)) {
+            $exploded[$i] = strtolower($exploded[$i]);
+        }
+    }
+    for ($i = 0; $i < count($exploded); $i++) {
+        if (in_array(strtolower($exploded[$i]), $apple_exceptions)) {
+            $exploded[$i] = strtolower($exploded[$i]);
+            $apple_temp = $exploded[$i];
+            $apple_temp[1] = strtoupper($apple_temp[1]);
+            $exploded[$i] = $apple_temp;
+        }
+    }
+    $temp = implode(" ", $exploded);
+    return $temp;
+}
+
+function title_case_form_submit($form, &$form_state) {
+    $input_title = $form_state['values']['input_title'];
+
+    $_SESSION['output_title'] = makeTitleCase($input_title);
+    $form_state['redirect'] = 'title_case_success';
+}
+
+function title_case_success() {
+    return '<p>' . $_SESSION['output_title'] . '</p>';
+}
